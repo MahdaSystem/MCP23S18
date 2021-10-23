@@ -3,7 +3,7 @@
  * @file   MCP23S18.c
  * @author Mohammad Sayadi (https://github.com/msthrax)
  *         Ali Moallem (https://github.com/AliMoal)
- * @brief  
+ * @brief  For working with MCP23S18
  **********************************************************************************
  *
  *! Copyright (c) 2021 Mahda Embedded System (MIT License)
@@ -468,7 +468,7 @@ void MCP23S18_WriteOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Ma
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], MaskB & GPIOState[1]);
 #endif
 }
-void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, MCP23S18_GPIOState_t GPIOState) { // OLAT
+void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], (MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATA]) & (~MaskA)) | (MaskA & GPIOState[0])); // GPIOA
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], (MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATB]) & (~MaskB)) | (MaskB & GPIOState[1])); // GPIOB
 }

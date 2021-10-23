@@ -3,7 +3,7 @@
  * @file   MCP23S18.h
  * @author Mohammad Sayadi (https://github.com/msthrax)
  *         Ali Moallem (https://github.com/AliMoal)
- * @brief  
+ * @brief  For working with MCP23S18
  **********************************************************************************
  *
  *! Copyright (c) 2021 Mahda Embedded System (MIT License)
@@ -48,8 +48,9 @@ extern "C" {
 //    !It means that the deselected pins will set as ZERO!
 //    !This is just for Pin configs and the deselected Ports will NOT be changed
 //    *Although You can use WriteFast functions without commenting MCP23S18_SAVE_DATA_VALUE define
+//! 4. In this Library Delay IS NOT USED and You DO NOT NEED to initialize Delay functions !//
 #define MCP23S18_SAVE_DATA_VALUE                     // READ NOTE ABOVE NO. 3
-#define MCP23S18_USE_MACRO_DELAY         1           // 0: Use handler delay ,So you have to set ADC_Delay_US in Handler | 1: use Macro delay, So you have to set MACRO_DELAY_US Macro
+#define MCP23S18_USE_MACRO_DELAY         0           // 0: Use handler delay ,So you have to set ADC_Delay_US in Handler | 1: use Macro delay, So you have to set MACRO_DELAY_US Macro
 // #define MCP23S18_MACRO_DELAY_US(x)                   // If you want to use Macro delay, place your delay function in microseconds here
 #define MCP23S18_Debug_Enable                        // Uncomment if you want to use (depends on printf in stdio.h)
 // #pragma anon_unions                                  // UNIMPLEMENTED !!! Uncomment if you are using Keil software
@@ -155,7 +156,7 @@ void MCP23S18_GetIntCaptureState(MCP23S18_Handler_t *Handler, uint8_t MaskA, uin
 void MCP23S18_ReadInput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState);
 void MCP23S18_ReadOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState);
 void MCP23S18_WriteOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState);
-void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, MCP23S18_GPIOState_t GPIOState); // This Sets All New Data In GPIOState Variables
+void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState); // This Sets All New Data In GPIOState Variables
 void MCP23S18_WriteOutputPortAHigh(MCP23S18_Handler_t *Handler);
 void MCP23S18_WriteOutputPortALow(MCP23S18_Handler_t *Handler);
 void MCP23S18_WriteOutputPortBHigh(MCP23S18_Handler_t *Handler);
