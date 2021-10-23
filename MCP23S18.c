@@ -104,6 +104,10 @@
 #else
 #define PROGRAMLOG(arg...)
 #endif
+
+#define CheckAssert(x) if(!x) PROGRAMLOG("!ASSERT FAILED!\r\n"); return // To Avoid From Memory Conflict
+#define CheckAssertSTR(x,s) if(!x) PROGRAMLOG("!ASSERT FAILED: %s IS NOT IMPLIMENTED!\r\n",s); return // To Avoid From Memory Conflict
+
 /**
  ** ==================================================================================
  **                            ##### Private Enums #####                               
@@ -152,9 +156,15 @@ static void MCP23S18_WriteReg(MCP23S18_Handler_t * MCP23S18_Handler, uint8_t reg
  **/
 // Initialization Function: ------------------------------------------------------- //
 void MCP23S18_Init(MCP23S18_Handler_t *Handler) { 
+  CheckAssertSTR(Handler->MCP23S18_CS_High, "CS HIGH");
+  CheckAssertSTR(Handler->MCP23S18_CS_Low, "CS LOW");
+  CheckAssertSTR(Handler->MCP23S18_Spi_ReadByte, "SPI READ BYTE");
+  CheckAssertSTR(Handler->MCP23S18_Spi_WriteByte, "SPI WRITE BYTE");
+#if MCP23S18_USE_MACRO_DELAY == 0
+  CheckAssertSTR(Handler->MCP23S18_Delay_US, "DELAY US");
+#endif
   // SelectBank = 0; // POR/RST: BANK0 // FOR_SELECT_BANK_MACRO
   //? USER INIT CODE begin ?//
-  
   
   //? USER INIT CODE End   ?//
   PROGRAMLOG("IODIRA:   0x%02X | IODIRB:   0x%02X\r\n"
@@ -468,26 +478,26 @@ void MCP23S18_WriteOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Ma
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], MaskB & GPIOState[1]);
 #endif
 }
-void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState) { // OLAT
-  MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], (MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATA]) & (~MaskA)) | (MaskA & GPIOState[0])); // GPIOA
-  MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], (MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATB]) & (~MaskB)) | (MaskB & GPIOState[1])); // GPIOB
+void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, MCP23S18_GPIOState_t GPIOState) { // OLAT
+  MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], GPIOState[0]); // GPIOA
+  MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], GPIOState[1]); // GPIOB
 }
-void MCP23S18_WriteOutputPortAHigh(MCP23S18_Handler_t *Handler) { // OLAT
+void MCP23S18_WriteOutputPortAHighFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], 0xFF);
 //  PROGRAMLOG("OLATA: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATA_BANK0));
 }
-void MCP23S18_WriteOutputPortALow(MCP23S18_Handler_t *Handler) { // OLAT
+void MCP23S18_WriteOutputPortALowFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], 0x00);
 //  PROGRAMLOG("OLATA: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATA_BANK0));
 }
-void MCP23S18_WriteOutputPortBHigh(MCP23S18_Handler_t *Handler) { // OLAT
+void MCP23S18_WriteOutputPortBHighFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], 0xFF);
 //  PROGRAMLOG("OLATB: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATB_BANK0));
 }
-void MCP23S18_WriteOutputPortBLow(MCP23S18_Handler_t *Handler) { // OLAT
+void MCP23S18_WriteOutputPortBLowFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], 0x00);
 //  PROGRAMLOG("OLATB: 0x%X\r\n",0
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATB_BANK0));
