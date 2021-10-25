@@ -105,14 +105,18 @@
 #define PROGRAMLOG(arg...)
 #endif
 
+#define XtoStr(x) #x
 #define CheckAssert(x) if(!x) PROGRAMLOG("!ASSERT FAILED!\r\n"); return // To Avoid From Memory Conflict
-#define CheckAssertSTR(x,s) if(!x) PROGRAMLOG("!ASSERT FAILED: %s IS NOT IMPLIMENTED!\r\n",s); return // To Avoid From Memory Conflict
+#define CheckAssertSTR(x) if(!x) PROGRAMLOG("!ASSERT FAILED: "XtoStr(x)" IS NOT IMPLIMENTED!\r\n"); return // To Avoid From Memory Conflict
 
 /**
  ** ==================================================================================
  **                            ##### Private Enums #####                               
  ** ==================================================================================
  **/
+/**
+ * @brief  Registers Names
+ */
 enum RegisterNames{
   IODIRA = 0, IODIRB, IPOLA, IPOLB, GPINTENA, GPINTENB, DEFVALA, DEFVALB, INTCONA, INTCONB,
   IOCONA, IOCONB, GPPUA, GPPUB, INTFA, INTFB, INTCAPA, INTCAPB, GPIOA, GPIOB, OLATA, OLATB
@@ -122,6 +126,9 @@ enum RegisterNames{
  **                          ##### Private Constants #####                               
  ** ==================================================================================
  **/
+/**
+ * @brief  Saving the Addresses of registers for each bank
+ */
 static const uint8_t
 BankAdd[2][22] = {// First Dir: BANK0 | Second Dir: BANK1
   {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15},
@@ -132,6 +139,13 @@ BankAdd[2][22] = {// First Dir: BANK0 | Second Dir: BANK1
  *!                          ##### Private Functions #####                               
  *! ==================================================================================
  **/
+
+/**
+ * @brief  Reads register value
+ * @param  MCP23S18_Handler: Pointer of library handler
+ * @param  reg:              Address of register
+ * @retval Read data
+ */
 static uint8_t MCP23S18_ReadReg(MCP23S18_Handler_t * MCP23S18_Handler, uint8_t reg) {
   MCP23S18_Handler->MCP23S18_CS_Low();
   MCP23S18_Handler->MCP23S18_Spi_WriteByte(MCP23S18_READ_ADDR);
@@ -140,7 +154,13 @@ static uint8_t MCP23S18_ReadReg(MCP23S18_Handler_t * MCP23S18_Handler, uint8_t r
   MCP23S18_Handler->MCP23S18_CS_High();
   return ret;
 }
-
+/**
+ * @brief  Write value to register
+ * @param  MCP23S18_Handler: Pointer of library handler
+ * @param  reg:              Address of register
+ * @param  value:            Date to be written
+ * @retval None
+ */
 static void MCP23S18_WriteReg(MCP23S18_Handler_t * MCP23S18_Handler, uint8_t reg, uint8_t value) {
   MCP23S18_Handler->MCP23S18_CS_Low();
   MCP23S18_Handler->MCP23S18_Spi_WriteByte(MCP23S18_WRITE_ADDR);
@@ -155,13 +175,19 @@ static void MCP23S18_WriteReg(MCP23S18_Handler_t * MCP23S18_Handler, uint8_t reg
  ** ==================================================================================
  **/
 // Initialization Function: ------------------------------------------------------- //
+/**
+ * @brief  Initializes the library
+ * @note   Must be called at FIRST and ONCE!
+ * @param  Handler: Pointer of library handler
+ * @retval None
+ */
 void MCP23S18_Init(MCP23S18_Handler_t *Handler) { 
-  CheckAssertSTR(Handler->MCP23S18_CS_High, "CS HIGH");
-  CheckAssertSTR(Handler->MCP23S18_CS_Low, "CS LOW");
-  CheckAssertSTR(Handler->MCP23S18_Spi_ReadByte, "SPI READ BYTE");
-  CheckAssertSTR(Handler->MCP23S18_Spi_WriteByte, "SPI WRITE BYTE");
+  CheckAssertSTR(Handler->MCP23S18_CS_High);
+  CheckAssertSTR(Handler->MCP23S18_CS_Low);
+  CheckAssertSTR(Handler->MCP23S18_Spi_ReadByte);
+  CheckAssertSTR(Handler->MCP23S18_Spi_WriteByte);
 #if MCP23S18_USE_MACRO_DELAY == 0
-  CheckAssertSTR(Handler->MCP23S18_Delay_US, "DELAY US");
+  CheckAssertSTR(Handler->MCP23S18_Delay_US);
 #endif
   // SelectBank = 0; // POR/RST: BANK0 // FOR_SELECT_BANK_MACRO
   //? USER INIT CODE begin ?//
@@ -202,6 +228,14 @@ void MCP23S18_Init(MCP23S18_Handler_t *Handler) {
   MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATB]));
 }
 // Setting Functions: ------------------------------------------------------------- //
+/**
+ * @brief  Sets Configurations on IOCON registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be set
+ * @param  MaskB:   Mask for port B to choose which pins have to be set
+ * @param  Config:  See MCP23S18_Config_t
+ * @retval None
+ */
 void MCP23S18_SetConfig(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Config_t Config) { // IOCON
   Config[0] &= 0x7F; // For Now Must Use BANK0 // FOR_SELECT_BANK_MACRO
   Config[1] &= 0x7F; // For Now Must Use BANK0 // FOR_SELECT_BANK_MACRO
@@ -217,6 +251,14 @@ void MCP23S18_SetConfig(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mask
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][IOCONB], MaskB & Config[1]);
 #endif
 }
+/**
+ * @brief  Gets Configurations from IOCON registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be get
+ * @param  MaskB:   Mask for port B to choose which pins have to be get
+ * @param  Config:  See MCP23S18_Config_t
+ * @retval None
+ */
 void MCP23S18_GetConfig(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Config_t Config) { // IOCON
 #ifdef MCP23S18_SAVE_DATA_VALUE   
   if (MaskA) // GPIOA 
@@ -230,6 +272,14 @@ void MCP23S18_GetConfig(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mask
     Config[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][IOCONB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Directions on IODIR registers
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be set
+ * @param  MaskB:      Mask for port B to choose which pins have to be set
+ * @param  Direction:  See MCP23S18_Direction_t
+ * @retval None
+ */
 void MCP23S18_SetDirection(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Direction_t Direction) { // IODIR
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -243,6 +293,14 @@ void MCP23S18_SetDirection(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t M
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][IODIRB], MaskB & Direction[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Directions from IODIR registers
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be get
+ * @param  MaskB:      Mask for port B to choose which pins have to be get
+ * @param  Direction:  See MCP23S18_Direction_t
+ * @retval None
+ */
 void MCP23S18_GetDirection(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Direction_t Direction) { // IODIR
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -256,6 +314,14 @@ void MCP23S18_GetDirection(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t M
     Direction[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][IODIRB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Directions on IPOL registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be set
+ * @param  MaskB:   Mask for port B to choose which pins have to be set
+ * @param  Type:    See MCP23S18_Type_t
+ * @retval None
+ */
 void MCP23S18_SetTypes(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Type_t Type) { // IPOL
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -269,6 +335,14 @@ void MCP23S18_SetTypes(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][IPOLB], MaskB & Type[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Directions from IPOL registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be get
+ * @param  MaskB:   Mask for port B to choose which pins have to be get
+ * @param  Type:    See MCP23S18_Type_t
+ * @retval None
+ */
 void MCP23S18_GetTypes(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_Type_t Type) { // IPOL
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -282,6 +356,14 @@ void MCP23S18_GetTypes(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB
     Type[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][IPOLB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Pull-up on GPPU registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be set
+ * @param  MaskB:   Mask for port B to choose which pins have to be set
+ * @param  PullUp:  See MCP23S18_PullUp_t
+ * @retval None
+ */
 void MCP23S18_SetPullUp(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_PullUp_t PullUp) { // GPPU
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -295,6 +377,14 @@ void MCP23S18_SetPullUp(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mask
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][GPPUB], MaskB & PullUp[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Pull-up from GPPU registers
+ * @param  Handler: Pointer of library handler
+ * @param  MaskA:   Mask for port A to choose which pins have to be get
+ * @param  MaskB:   Mask for port B to choose which pins have to be get
+ * @param  PullUp:  See MCP23S18_PullUp_t
+ * @retval None
+ */
 void MCP23S18_GetPullUp(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_PullUp_t PullUp) { // GPPU
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -308,6 +398,14 @@ void MCP23S18_GetPullUp(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mask
     PullUp[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][GPPUB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Interrupt enabling on GPINTEN registers
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be set
+ * @param  MaskB:      Mask for port B to choose which pins have to be set
+ * @param  IntEnable:  See MCP23S18_IntEnable_t
+ * @retval None
+ */
 void MCP23S18_SetIntEnable(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntEnable_t IntEnable) { // GPINTEN
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -321,6 +419,14 @@ void MCP23S18_SetIntEnable(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t M
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][GPINTENB], MaskB & IntEnable[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Interrupt enabling from GPINTEN registers
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be get
+ * @param  MaskB:      Mask for port B to choose which pins have to be get
+ * @param  IntEnable:  See MCP23S18_IntEnable_t
+ * @retval None
+ */
 void MCP23S18_GetIntEnable(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntEnable_t IntEnable) { // GPINTEN
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -334,6 +440,14 @@ void MCP23S18_GetIntEnable(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t M
     IntEnable[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][GPINTENB] & MaskB);
 #endif
 }
+/**
+ * @brief  Sets Pin Interrupt default value on DEFVAL registers
+ * @param  Handler:        Pointer of library handler
+ * @param  MaskA:          Mask for port A to choose which pins have to be set
+ * @param  MaskB:          Mask for port B to choose which pins have to be set
+ * @param  IntDefaultVal:  See MCP23S18_IntDefaultVal_t
+ * @retval None
+ */
 void MCP23S18_SetIntDefaultVal(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntDefaultVal_t IntDefaultVal) { // DEFVAL
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -347,6 +461,14 @@ void MCP23S18_SetIntDefaultVal(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][DEFVALB], MaskB & IntDefaultVal[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Interrupt default value from DEFVAL registers
+ * @param  Handler:        Pointer of library handler
+ * @param  MaskA:          Mask for port A to choose which pins have to be get
+ * @param  MaskB:          Mask for port B to choose which pins have to be get
+ * @param  IntDefaultVal:  See MCP23S18_IntDefaultVal_t
+ * @retval None
+ */
 void MCP23S18_GetIntDefaultVal(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntDefaultVal_t IntDefaultVal) { // DEFVAL
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -360,6 +482,14 @@ void MCP23S18_GetIntDefaultVal(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8
     IntDefaultVal[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][DEFVALB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Interrupt comparison mode on INTCON registers
+ * @param  Handler:     Pointer of library handler
+ * @param  MaskA:       Mask for port A to choose which pins have to be set
+ * @param  MaskB:       Mask for port B to choose which pins have to be set
+ * @param  IntCompare:  See MCP23S18_IntCompare_t
+ * @retval None
+ */
 void MCP23S18_SetIntCompare(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntCompare_t IntCompare) { // INTCON
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -373,6 +503,14 @@ void MCP23S18_SetIntCompare(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t 
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][INTCONB], MaskB & IntCompare[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Interrupt comparison mode from INTCON registers
+ * @param  Handler:     Pointer of library handler
+ * @param  MaskA:       Mask for port A to choose which pins have to be get
+ * @param  MaskB:       Mask for port B to choose which pins have to be get
+ * @param  IntCompare:  See MCP23S18_IntCompare_t
+ * @retval None
+ */
 void MCP23S18_GetIntCompare(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntCompare_t IntCompare) { // INTCON
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -386,6 +524,14 @@ void MCP23S18_GetIntCompare(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t 
     IntCompare[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][INTCONB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Interrupt flags on INTF registers
+ * @param  Handler:      Pointer of library handler
+ * @param  MaskA:        Mask for port A to choose which pins have to be set
+ * @param  MaskB:        Mask for port B to choose which pins have to be set
+ * @param  IntOccurred:  See MCP23S18_IntOccurred_t
+ * @retval None
+ */
 void MCP23S18_SetIntOccurred(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntOccurred_t IntOccurred) { // INTF
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -399,6 +545,14 @@ void MCP23S18_SetIntOccurred(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][INTFB], MaskB & IntOccurred[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Interrupt flags from INTF registers
+ * @param  Handler:      Pointer of library handler
+ * @param  MaskA:        Mask for port A to choose which pins have to be get
+ * @param  MaskB:        Mask for port B to choose which pins have to be get
+ * @param  IntOccurred:  See MCP23S18_IntOccurred_t
+ * @retval None
+ */
 void MCP23S18_GetIntOccurred(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntOccurred_t IntOccurred) { // INTF
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -412,6 +566,14 @@ void MCP23S18_GetIntOccurred(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t
     IntOccurred[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][INTFB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Sets Pin Interrupt capturing state on INTCAP registers
+ * @param  Handler:          Pointer of library handler
+ * @param  MaskA:            Mask for port A to choose which pins have to be set
+ * @param  MaskB:            Mask for port B to choose which pins have to be set
+ * @param  IntCaptureState:  See MCP23S18_IntCaptureState_t
+ * @retval None
+ */
 void MCP23S18_SetIntCaptureState(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntCaptureState_t IntCaptureState) { // INTCAP
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -425,6 +587,14 @@ void MCP23S18_SetIntCaptureState(MCP23S18_Handler_t *Handler, uint8_t MaskA, uin
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][INTCAPB], MaskB & IntCaptureState[1]);
 #endif
 }
+/**
+ * @brief  Gets Pin Interrupt capturing state from INTCAP registers
+ * @param  Handler:          Pointer of library handler
+ * @param  MaskA:            Mask for port A to choose which pins have to be get
+ * @param  MaskB:            Mask for port B to choose which pins have to be get
+ * @param  IntCaptureState:  See MCP23S18_IntCaptureState_t
+ * @retval None
+ */
 void MCP23S18_GetIntCaptureState(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_IntCaptureState_t IntCaptureState) { // INTCAP
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -439,6 +609,15 @@ void MCP23S18_GetIntCaptureState(MCP23S18_Handler_t *Handler, uint8_t MaskA, uin
 #endif
 }
 // Read/Write Functions: ---------------------------------------------------------- //
+/**
+ * @brief  Reads Input pins from GPIO registers
+ * @note   To read Output pins use MCP23S18_ReadOutput function
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be read
+ * @param  MaskB:      Mask for port B to choose which pins have to be read
+ * @param  GPIOState:  See MCP23S18_GPIOState_t
+ * @retval None
+ */
 void MCP23S18_ReadInput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState) { // GPIO
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -452,6 +631,15 @@ void MCP23S18_ReadInput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mask
     GPIOState[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][GPIOB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Reads Output pins state from OLAT registers
+ * @note   To read Input pins use MCP23S18_ReadInput function
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be read
+ * @param  MaskB:      Mask for port B to choose which pins have to be read
+ * @param  GPIOState:  See MCP23S18_GPIOState_t
+ * @retval None
+ */
 void MCP23S18_ReadOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState) { // OLAT
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -465,6 +653,14 @@ void MCP23S18_ReadOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Mas
     GPIOState[1] = MCP23S18_ReadReg(Handler, BankAdd[SelectBank][OLATB]) & MaskB;
 #endif
 }
+/**
+ * @brief  Writes Output pins state on OLAT registers
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be written
+ * @param  MaskB:      Mask for port B to choose which pins have to be written
+ * @param  GPIOState:  See MCP23S18_GPIOState_t
+ * @retval None
+ */
 void MCP23S18_WriteOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t MaskB, MCP23S18_GPIOState_t GPIOState) { // OLAT
 #ifdef MCP23S18_SAVE_DATA_VALUE 
   if (MaskA) // GPIOA 
@@ -478,25 +674,54 @@ void MCP23S18_WriteOutput(MCP23S18_Handler_t *Handler, uint8_t MaskA, uint8_t Ma
     MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], MaskB & GPIOState[1]);
 #endif
 }
+/**
+ * @brief  Writes Output pins state on OLAT registers fast!
+ * @note   This Sets All New Data In GPIOState Variables
+ * @param  Handler:    Pointer of library handler
+ * @param  MaskA:      Mask for port A to choose which pins have to be written
+ * @param  MaskB:      Mask for port B to choose which pins have to be written
+ * @param  GPIOState:  See MCP23S18_GPIOState_t
+ * @retval None
+ */
 void MCP23S18_WriteOutputFAST(MCP23S18_Handler_t *Handler, MCP23S18_GPIOState_t GPIOState) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], GPIOState[0]); // GPIOA
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], GPIOState[1]); // GPIOB
 }
+/**
+ * @brief  Writes Output All port A pins HIGH on OLAT registers fast!
+ * @param  Handler: Pointer of library handler
+ * @retval None
+ */
 void MCP23S18_WriteOutputPortAHighFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], 0xFF);
 //  PROGRAMLOG("OLATA: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATA_BANK0));
 }
+/**
+ * @brief  Writes Output All port A pins LOW on OLAT registers fast!
+ * @param  Handler: Pointer of library handler
+ * @retval None
+ */
 void MCP23S18_WriteOutputPortALowFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATA], 0x00);
 //  PROGRAMLOG("OLATA: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATA_BANK0));
 }
+/**
+ * @brief  Writes Output All port B pins HIGH on OLAT registers fast!
+ * @param  Handler: Pointer of library handler
+ * @retval None
+ */
 void MCP23S18_WriteOutputPortBHighFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], 0xFF);
 //  PROGRAMLOG("OLATB: 0x%X\r\n",
 //  MCP23S18_ReadReg(MCP23S18_Handler, OLATB_BANK0));
 }
+/**
+ * @brief  Writes Output All port B pins LOW on OLAT registers fast!
+ * @param  Handler: Pointer of library handler
+ * @retval None
+ */
 void MCP23S18_WriteOutputPortBLowFAST(MCP23S18_Handler_t *Handler) { // OLAT
   MCP23S18_WriteReg(Handler, BankAdd[SelectBank][OLATB], 0x00);
 //  PROGRAMLOG("OLATB: 0x%X\r\n",0
